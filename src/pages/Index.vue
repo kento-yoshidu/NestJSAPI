@@ -6,6 +6,9 @@
 
     <h1>Hello, world!</h1>
 
+    <h1>{{ title }}</h1>
+
+    <p>{{ $static.metadata.siteName }}</p>
     <p>
       Lorem ipsum dolor sit amet, consectetur adipisicing elit. Pariatur excepturi labore tempore expedita, et iste tenetur suscipit explicabo! Dolores, aperiam non officia eos quod asperiores
     </p>
@@ -21,10 +24,18 @@
 <script>
 export default {
   metaInfo: {
-    title: 'Hello, world!'
+    title: 'Hello, world!?????'
   }
 }
 </script>
+
+<static-query>
+query {
+  metadata {
+    siteName
+  }
+}
+</static-query>
 
 <style>
 .home-links a {
