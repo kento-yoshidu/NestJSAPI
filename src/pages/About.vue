@@ -1,14 +1,43 @@
 <template>
   <Layout>
-    <h1>About us</h1>
-    <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Error doloremque omnis animi, eligendi magni a voluptatum, vitae, consequuntur rerum illum odit fugit assumenda rem dolores inventore iste reprehenderit maxime! Iusto.</p>
+    <div class="content">
+      <div class="card" v-for="edge in $page.allFaker.edges" :key="edge.node.id">
+        <div class="card-content columns">
+        <div class="column is-2">
+          <figure class="image is-128x128">
+            <img class="is-rounded" :src="edge.node.avatar">
+          </figure>
+        </div>
+        <div class="column">
+          <p class="title"> {{ edge.node.author }}</p>
+          <p class="subtitle"> <i class="has-text-dark">Contact Email:</i> {{ edge.node.email.src }}</p>
+          <p class="subtitle"> <i class="has-text-dark"> Profile: </i> {{ edge.node.title }}</p>
+        </div>
+        </div>
+      </div>
+      </div>
   </Layout>
 </template>
 
 <script>
 export default {
   metaInfo: {
-    title: 'About us'
+    title: 'about'
   }
 }
 </script>
+
+<page-query>
+query allFaker {
+  allFaker (perPage: 10) {
+    edges {
+      node {
+        email,
+        author,
+        avatar,
+        title,
+      }
+    }
+  }
+}
+</page-query>

@@ -8,7 +8,6 @@
 
     <h1>{{ title }}</h1>
 
-    <p>{{ $static.metadata.siteName }}</p>
     <p>
       Lorem ipsum dolor sit amet, consectetur adipisicing elit. Pariatur excepturi labore tempore expedita, et iste tenetur suscipit explicabo! Dolores, aperiam non officia eos quod asperiores
     </p>
@@ -29,6 +28,7 @@ export default {
 }
 </script>
 
+<!--
 <static-query>
 query {
   metadata {
@@ -36,6 +36,7 @@ query {
   }
 }
 </static-query>
+-->
 
 <style>
 .home-links a {
