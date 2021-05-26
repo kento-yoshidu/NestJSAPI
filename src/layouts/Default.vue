@@ -1,18 +1,15 @@
 <template>
-  <div class="layout">
+  <div class="container">
     <header class="header">
-      <strong>
-        <g-link to="/">{{ $static.metadata.siteName }}</g-link>
-      </strong>
-      <nav class="nav">
-        <g-link class="nav__link" to="/">Home</g-link>
-        <g-link class="nav__link" to="/about/">About</g-link>
-      </nav>
+      <g-link class="subtitle is-size-3" :to="{ name: 'home' }">Home</g-link>
     </header>
+
     <slot/>
+
   </div>
 </template>
 
+<!--
 <static-query>
 query {
   metadata {
@@ -48,3 +45,5 @@ body {
   margin-left: 20px;
 }
 </style>
+
+-->
