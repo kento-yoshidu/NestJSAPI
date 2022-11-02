@@ -3,8 +3,14 @@
 * ControllerはServiceを呼び出すことで、リクエストに応じた適切なレスポンスを返すことができます。
 **/
 
-import { Body, Controller, Get, Post, Param } from "@nestjs/common"
+/**
+ * Controllerはユーザーのリクエストを受け付けるという役割を持つ。
+ * 実際に処理を行うのはService
+ */
+
+import { Body, Controller, Delete, Get, Post, Patch, Param } from "@nestjs/common"
 import { CreateTaskDto } from "./dto/create-task-dto"
+import { UpdateTaskDto } from "./dto/update-task-dto"
 import { Task } from "./task.entity"
 import { TasksService } from "./task.service"
 
@@ -29,5 +35,18 @@ export class TasksController {
   @Get(":id")
   findOne(@Param("id") id: string): Promise<Task> {
     return this.tasksService.findOne(id)
+  }
+
+  @Patch(":id")
+  update(
+    @Param("id") id: string,
+    @Body() updateTaskDto: UpdateTaskDto
+  ): Promise<Task> {
+    return this.tasksService.update(id, updateTaskDto)
+  }
+
+  @Delete(":id")
+  delete(@Param("id") id: string) {
+    return this.tasksService.delete(id)
   }
 }
