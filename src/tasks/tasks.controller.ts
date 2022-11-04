@@ -22,7 +22,7 @@ export class TasksController {
   @Post()
   // Request body にユーザーのリクエストを受け付ける
   create(@Body() createTaskDto: CreateTaskDto): Promise<Task> {
-    return this.tasksService.create(CreateTaskDto)
+    return this.tasksService.create(createTaskDto)
   }
 
   /* Task を取得するためのリクエストを受け付けるメソッド */
