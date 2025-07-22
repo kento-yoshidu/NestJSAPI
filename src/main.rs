@@ -1,59 +1,89 @@
 mod models;
+mod handlers;
 
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
-use argon2::Argon2;
-use password_hash::SaltString;
-use rand::rngs::OsRng;
-use sqlx::{postgres::PgPoolOptions, PgPool};
-use password_hash::PasswordHasher;
+use bcrypt::verify;
+use chrono::{Utc, Duration};
+use jsonwebtoken::{encode, Header, EncodingKey};
+use sqlx::postgres::PgPoolOptions;
 use dotenv::dotenv;
 use std::env;
 
-use crate::models::user::{User, NewUser};
+use crate::models::user::{Claims, LoginRequest, NewUser, User};
 
 #[get("/")]
 async fn hello() -> impl Responder {
     HttpResponse::Ok().body("Hello World!")
 }
 
-fn hash_password(plain: &str) -> Result<String, argon2::password_hash::Error> {
-    let salt = SaltString::generate(&mut OsRng);
-    let argon2 = Argon2::default();
-    let hash = argon2.hash_password(plain.as_bytes(), &salt)?.to_string();
-    Ok(hash)
-}
+#[post("signup")]
+async fn signup(db_pool: web::Data<sqlx::PgPool>, paylod: web::Json<NewUser>) -> impl Responder {
+    let hashed = bcrypt::hash(&paylod.password, bcrypt::DEFAULT_COST).unwrap();
 
-#[post("/users")]
-async fn register_user(
-    pool: web::Data<PgPool>,
-    form: web::Json<NewUser>,
-) -> impl Responder {
-    let hash = match hash_password(&form.password) {
-        Ok(h) => h,
-        Err(_) => return HttpResponse::InternalServerError().body("Password hash failed"),
-    };
-
-    let result = sqlx::query_as!(
-        User,
-        r#"
-        INSERT INTO users (name, hashed_password)
-        VALUES ($1, $2)
-        RETURNING id, name, hashed_password, created_at
-        "#,
-        form.name,
-        hash
+    let result = sqlx::query!(
+        "INSERT INTO users
+            (name, hashed_password)
+        VALUES
+            ($1, $2)",
+        paylod.name,
+        hashed
     )
-    .fetch_one(pool.get_ref())
+    .execute(db_pool.get_ref())
     .await;
 
     match result {
-        Ok(user) => HttpResponse::Ok().json(user),
+        Ok(_) => HttpResponse::Ok().body("ユーザー登録完了"),
         Err(e) => {
-            eprintln!("DB Error {:?}", e);
-            HttpResponse::InternalServerError().finish()
+            eprintln!("DB保存エラー: {:?}", e);
+            HttpResponse::InternalServerError().body("保存失敗")
         }
     }
+}
 
+#[post("signin")]
+pub async fn signin(db_pool: web::Data<sqlx::PgPool>, form: web::Json<LoginRequest>) -> impl Responder {
+    let user = sqlx::query_as::<_, User>(
+        "SELECT
+            id,
+            name,
+            hashed_password,
+            created_at
+        FROM
+            users
+        WHERE
+            name = $1"
+    )
+    .bind(&form.name)
+    .fetch_optional(db_pool.get_ref())
+    .await;
+
+    let user = match user {
+        Ok(Some(u)) => u,
+        _ => return HttpResponse::Unauthorized().body("ユーザーが見つかりません"),
+    };
+
+    let is_valid = verify(&form.password, &user.hashed_password).unwrap_or(false);
+    if !is_valid {
+        return HttpResponse::Unauthorized().body("パスワードが間違っています");
+    }
+
+    // JWT生成
+    let expiration = Utc::now()
+        .checked_add_signed(Duration::hours(24))
+        .unwrap()
+        .timestamp();
+
+    let claims = Claims {
+        user_id: user.id,
+        exp: expiration as usize,
+    };
+
+    const SECRET: &[u8] = b"secret";
+
+    let token = encode(&Header::default(), &claims, &EncodingKey::from_secret(SECRET))
+        .unwrap();
+
+    HttpResponse::Ok().json(serde_json::json!({ "token": token }))
 }
 
 #[actix_web::main]
@@ -75,7 +105,8 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(web::Data::new(pool.clone()))
             .service(hello)
-            .service(register_user)
+            .service(signin)
+            .service(signup)
     })
     .bind(("0.0.0.0", 8000))?
     .run()

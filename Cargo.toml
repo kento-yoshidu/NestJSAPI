@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 actix-web = "4"
+actix-web-httpauth = "0.8"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tokio = { version = "1", features = ["full"] }
@@ -12,7 +13,9 @@ sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres", "macro
 dotenvy = "0.15"
 uuid = { version = "1", features = ["serde"] }
 chrono = { version = "0.4", features = ["serde"] }
+jsonwebtoken = "9"
 argon2 = "0.5"
 rand = "0.8"
 password-hash = "0.5"
 dotenv = "0.15.0"
+bcrypt = "0.14"
